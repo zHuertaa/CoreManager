@@ -1,0 +1,52 @@
+#░██████╗██╗░░░░░██╗███╗░░░███╗███████╗░█████╗░░█████╗░██████╗░███████╗███╗░░░███╗░█████╗░███╗░░██╗░█████╗░░██████╗░███████╗██████╗░
+#██╔════╝|██║░░░░░██║████╗░████║██╔════╝██╔══██╗██╔══██╗██╔══██╗██╔════╝████╗░████║██╔══██╗████╗░██║██╔══██╗██╔════╝░██╔════╝██╔══██╗
+#╚█████╗░██║░░░░░██║██╔████╔██║█████╗░░██║░░╚═╝██║░░██║██████╔╝█████╗░░██╔████╔██║███████║██╔██╗██║███████║██║░░██╗░█████╗░░██████╔╝
+#░╚═══██╗██║░░░░░██║██║╚██╔╝██║██╔══╝░░██║░░██╗██║░░██║██╔══██╗██╔══╝░░██║╚██╔╝██║██╔══██║██║╚████║██╔══██║██║░░╚██╗██╔══╝░░██╔══██╗
+#██████╔╝███████╗██║██║░╚═╝░██║███████╗╚█████╔╝╚█████╔╝██║░░██║███████╗██║░╚═╝░██║██║░░██║██║░╚███║██║░░██║╚██████╔╝███████╗██║░░██║
+#╚═════╝░╚══════╝╚═╝╚═╝░░░░░╚═╝╚══════╝░╚════╝░░╚════╝░╚═╝░░╚═╝╚══════╝╚═╝░░░░░╚═╝╚═╝░░╚═╝╚═╝░░╚══╝╚═╝░░╚═╝░╚═════╝░╚══════╝╚═╝░░╚═╝
+
+anuncios: #Aquí se configuraran los anuncios de manera global del servidor.
+  permiso: "coremanager.anuncios.view" #Permiso para ver/no ver la lista de anuncios.
+  discord: #Este es el id del anuncio en general.
+    servidores: ["global"] #ID de los servidores donde seran enviados los anuncios.
+    intervalo:
+      dias: ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"] #Dias a enviar el anuncio
+      cooldown: 00:00:15 #Tiempo de envio entre anuncios, HH:MM:SS Horas:Minutos:Segundos, 23:59:59
+    tipo: TEXTO #Tipo de Anuncio a Enviar, puede ser TEXTO, TITULOS (Con Subtitulo), ACTIONBAR, BOSSBAR
+    texto:
+    - " "
+    - "&fAnuncio de &dDiscord" #Soporte con formato vanilla de Minecraft
+    - "&#084CFBA&#1256FBn&#1B60FBu&#2569FBn&#2F73FBc&#397DFCi&#4287FCo &#569BFCd&#5FA4FCe &#73B8FCD&#7CC2FCi&#86CCFDs&#90D6FDc&#9ADFFDo&#A3E9FDr&#ADF3FDd" #Soporte con formato &#RRGGBB
+    - "<gradient:#084CFB:#ADF3FD>Anuncio de Discord</gradient>" #Soporte con formato MiniMessage
+
+  actionbar:
+    servidores: ["lobby", "survivalcustom"]
+    intervalo:
+      dias: ["lunes", "miercoles", "viernes", "domingo"]
+      cooldown: 00:00:15
+    tipo: ACTIONBAR
+    actionbar:
+    - "&aVisita Nuestra Tienda en Linea" #Soporte para los tres formatos [Vanilla, &#RRGGBB y MiniMessage]
+
+  bossbar:
+    servidores: ["survivalcustom"]
+    intervalo:
+      dias: ["lunes", "miercoles", "viernes", "domingo"]
+      cooldown: 00:00:15
+    tipo: BOSSBAR
+    progreso-dinamico: true #Si la bossbar se va desapareciendo gradualmente
+    duración: 5 #Duración en Segundos
+    color: # Opcional, valores: PINK, BLUE, RED, GREEN, YELLOW, PURPLE, WHITE
+    estilo: NOTCHED_10  # Opcional, valores: PROGRESS, NOTCHED_6, NOTCHED_10, NOTCHED_12, NOTCHED_20
+    bossbar:
+    - "&a%player_name% &evisita Nuestra Tienda en Linea" #Soporte para los tres formatos [Vanilla, &#RRGGBB y MiniMessage]
+    
+  titulo:
+    servidores: ["survivalcustom"]
+    intervalo:
+      dias: ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"] #Dias a enviar 
+      cooldown: 00:00:30
+    tipo: TITULOS
+    titulos:
+      titulo: "&a¡LEE LAS REGLAS!" #Soporte para los tres formatos [Vanilla, &#RRGGBB y MiniMessage]
+      subtitulo: "&aUsa /reglas para mas información" #Soporte para los tres formatos [Vanilla, &#RRGGBB y MiniMessage]

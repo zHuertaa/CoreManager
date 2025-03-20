@@ -1,0 +1,5 @@
+name: CoreManager
+version: 1.0-SNAPSHOT
+main: com.zhuerta.coremanager.CoreManager
+author: zHuerta
+description: Un plugin modular para Velocity con anuncios automáticos y más.
