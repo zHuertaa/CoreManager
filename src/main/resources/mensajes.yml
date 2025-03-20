@@ -1,0 +1,41 @@
+# Mensajes.yml - Archivo de mensajes personalizables para CoreManager
+
+# Prefijo que se añade a los mensajes que incluyen el placeholder %prefix%
+prefix: "&7[&aCoreManager&7] "
+
+# Mensajes del plugin (usados en CoreManager.java)
+plugin:
+  starting: "%prefix%&aCoreManager 1.0-SNAPSHOT - Iniciando..."
+  started: "&aCoreManager 1.0-SNAPSHOT - ¡Iniciado correctamente!"
+  stopping: "&cCoreManager 1.0-SNAPSHOT - Deteniendo..."
+  stopped: "&cCoreManager 1.0-SNAPSHOT - ¡Detenido correctamente!"
+
+# Mensajes de configuración (usados en AnnouncementsConfig.java)
+config:
+  creating-directory: "%prefix%&aCreando directorio plugins/CoreManager..."
+  copying-file: "%prefix%&aCopiando anuncios.yml desde los recursos a %path%"
+  file-not-found: "%prefix%&eNo se encontró anuncios.yml en los recursos. Se creó un archivo vacío en %path%"
+  file-exists: "%prefix%&aAnuncios.yml ya existe en %path%. Cargando configuración..."
+  no-announcements: "%prefix%&cNo se encontraron anuncios en anuncios.yml."
+  announcements-loaded: "%prefix%&aSe cargaron %count% anuncios desde anuncios.yml."
+
+# Mensajes de comandos (usados en CommandManager.java)
+commands:
+  usage: "%prefix%&eUso: &a/coremanager <reload|list>"
+  unknown-subcommand: "%prefix%&cSubcomando desconocido. &eUso: &a/coremanager <reload|list>"
+  no-permission: "%prefix%&cNo tienes permiso para usar este comando."
+  reloading: "%prefix%&aRecargando CoreManager..."
+  reloaded: "%prefix%&aCoreManager recargado correctamente."
+  reload-error: "%prefix%&cError al recargar CoreManager: %error%"
+  list:
+    header: "&a&m----------&r &aLista de Anuncios &a&m----------"
+    entry: "&e✦ &f%id% &7(Tipo: %type%)"
+    entry-hover: "&eID: &f%id%\n&eTipo: &f%type%\n&eIntervalo: &f%cooldown%\n&eServidores: &f%servers%\n&eDías: &f%days%"
+    entry-click: "&aHaz clic para ver más detalles"
+    separator: "&7&m--------------------"
+    no-announcements: "%prefix%&cNo hay anuncios cargados."
+  broadcast:
+    usage: "%prefix%&eUso: &a/coremanager broadcast <servidores> <tipos> <mensaje> &7(Para TITULOS: <título|subtítulo>)"
+    invalid-servers: "%prefix%&cNo se encontraron servidores válidos: %servers%"
+    invalid-types: "%prefix%&cTipos de anuncio no válidos: %types%"
+    success: "%prefix%&aAnuncio enviado a los servidores %servers% como %types%."

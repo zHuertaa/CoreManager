@@ -18,6 +18,8 @@ anuncios: #Aquí se configuraran los anuncios de manera global del servidor.
     - "&fAnuncio de &dDiscord" #Soporte con formato vanilla de Minecraft
     - "&#084CFBA&#1256FBn&#1B60FBu&#2569FBn&#2F73FBc&#397DFCi&#4287FCo &#569BFCd&#5FA4FCe &#73B8FCD&#7CC2FCi&#86CCFDs&#90D6FDc&#9ADFFDo&#A3E9FDr&#ADF3FDd" #Soporte con formato &#RRGGBB
     - "<gradient:#084CFB:#ADF3FD>Anuncio de Discord</gradient>" #Soporte con formato MiniMessage
+    - "&eHay %total_online_players% jugadores conectados en el proxy."
+    - "&a%player_name%, visita nuestra tienda en línea desde %server%"
 
   actionbar:
     servidores: ["lobby", "survivalcustom"]

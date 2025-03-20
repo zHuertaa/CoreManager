@@ -1,0 +1,13 @@
+# Configuración para los anuncios personalizados enviados con /coremanager broadcast
+
+# Configuración por defecto para anuncios de tipo BOSSBAR
+bossbar:
+  duracion: 5
+  progreso-dinamico: true
+  color: "YELLOW"
+  estilo: "NOTCHED_10"
+
+# Configuración por defecto para anuncios de tipo TITULOS
+titulos:
+  titulo: ""
+  subtitulo: ""

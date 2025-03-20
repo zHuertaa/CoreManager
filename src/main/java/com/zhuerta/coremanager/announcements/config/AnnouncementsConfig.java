@@ -1,9 +1,11 @@
 package com.zhuerta.coremanager.announcements.config;
 
 import com.zhuerta.coremanager.CoreManager;
+import com.zhuerta.coremanager.config.MessagesConfig;
+import com.zhuerta.coremanager.utils.TextProcessor;
+import net.kyori.adventure.text.Component;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.yaml.YAMLConfigurationLoader;
-import net.kyori.adventure.text.Component; // Import añadido
 
 import java.io.File;
 import java.io.IOException;
@@ -17,13 +19,15 @@ import java.util.Map;
 public class AnnouncementsConfig {
 
     private final CoreManager plugin;
+    private final MessagesConfig messagesConfig;
     private ConfigurationNode config;
     private final Path configPath;
     private List<Announcement> announcements;
     private String globalPermission;
 
-    public AnnouncementsConfig(CoreManager plugin) {
+    public AnnouncementsConfig(CoreManager plugin, TextProcessor textProcessor) {
         this.plugin = plugin;
+        this.messagesConfig = plugin.getMessagesConfig();
         this.configPath = new File("plugins/CoreManager/anuncios.yml").toPath();
         this.announcements = new ArrayList<>();
         loadConfig();
@@ -34,19 +38,33 @@ public class AnnouncementsConfig {
         try {
             if (!Files.exists(configPath.getParent())) {
                 Files.createDirectories(configPath.getParent());
+                Component creatingDirectoryMessage = messagesConfig.getMessage("config.creating-directory");
+                if (creatingDirectoryMessage != null) {
+                    plugin.getServer().getConsoleCommandSource().sendMessage(creatingDirectoryMessage);
+                }
             }
             if (!Files.exists(configPath)) {
                 // Intentar copiar el archivo desde los recursos
                 try (InputStream inputStream = getClass().getResourceAsStream("/anuncios.yml")) {
                     if (inputStream != null) {
                         Files.copy(inputStream, configPath);
+                        Component copyingFileMessage = messagesConfig.getMessage("config.copying-file", "%path%", configPath.toString());
+                        if (copyingFileMessage != null) {
+                            plugin.getServer().getConsoleCommandSource().sendMessage(copyingFileMessage);
+                        }
                     } else {
                         // Si no se encuentra en los recursos, crear un archivo vacío
                         Files.createFile(configPath);
-                        plugin.getServer().getConsoleCommandSource().sendMessage(
-                            Component.text("No se encontró anuncios.yml en los recursos. Se creó un archivo vacío en " + configPath)
-                        );
+                        Component fileNotFoundMessage = messagesConfig.getMessage("config.file-not-found", "%path%", configPath.toString());
+                        if (fileNotFoundMessage != null) {
+                            plugin.getServer().getConsoleCommandSource().sendMessage(fileNotFoundMessage);
+                        }
                     }
+                }
+            } else {
+                Component fileExistsMessage = messagesConfig.getMessage("config.file-exists", "%path%", configPath.toString());
+                if (fileExistsMessage != null) {
+                    plugin.getServer().getConsoleCommandSource().sendMessage(fileExistsMessage);
                 }
             }
             YAMLConfigurationLoader loader = YAMLConfigurationLoader.builder()
@@ -60,7 +78,13 @@ public class AnnouncementsConfig {
 
     private void loadAnnouncements() {
         ConfigurationNode anunciosNode = config.getNode("anuncios");
-        if (anunciosNode.isEmpty()) return;
+        if (anunciosNode.isEmpty()) {
+            Component noAnnouncementsMessage = messagesConfig.getMessage("config.no-announcements");
+            if (noAnnouncementsMessage != null) {
+                plugin.getServer().getConsoleCommandSource().sendMessage(noAnnouncementsMessage);
+            }
+            return;
+        }
 
         // Leer el permiso global
         this.globalPermission = anunciosNode.getNode("permiso").getString("coremanager.anuncios.view");
@@ -98,6 +122,11 @@ public class AnnouncementsConfig {
             }
 
             announcements.add(announcement);
+        }
+
+        Component announcementsLoadedMessage = messagesConfig.getMessage("config.announcements-loaded", "%count%", String.valueOf(announcements.size()));
+        if (announcementsLoadedMessage != null) {
+            plugin.getServer().getConsoleCommandSource().sendMessage(announcementsLoadedMessage);
         }
     }
 
