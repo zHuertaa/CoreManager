@@ -2,9 +2,11 @@ package com.zhuerta.coremanager.commands;
 
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
+import com.velocitypowered.api.proxy.Player;
 import com.zhuerta.coremanager.CoreManager;
 import com.zhuerta.coremanager.announcements.config.AnnouncementsConfig;
 import com.zhuerta.coremanager.config.MessagesConfig;
+import com.zhuerta.coremanager.staffchat.DiscordWebhookSender;
 import com.zhuerta.coremanager.utils.TextProcessor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -27,18 +29,26 @@ public class CommandManager implements SimpleCommand {
     private final TextProcessor textProcessor;
     private final MiniMessage miniMessage;
     private final Map<String, Subcommand> subcommands;
+    private final DiscordWebhookSender webhookSender;
 
     public CommandManager(CoreManager plugin) {
         this.plugin = plugin;
         this.messagesConfig = plugin.getMessagesConfig();
         this.textProcessor = plugin.getTextProcessor();
         this.miniMessage = MiniMessage.miniMessage();
+        // Pasamos el formato del mensaje y el formato del nombre del webhook
+        this.webhookSender = new DiscordWebhookSender(
+                plugin.getServer(),
+                plugin.getStaffChatModule().getConfig().getDiscordWebhookUrl(),
+                plugin.getStaffChatModule().getConfig().getDiscordFormat(),
+                plugin.getStaffChatModule().getConfig().getWebhookNameFormat()
+        );
 
-        // Mapa de subcomandos: nombre -> (permiso, ejecutor)
         this.subcommands = new HashMap<>();
         subcommands.put("reload", new Subcommand("coremanager.reload", this::executeReload));
         subcommands.put("list", new Subcommand("coremanager.list", this::executeList));
         subcommands.put("broadcast", new Subcommand("coremanager.broadcast", this::executeBroadcast));
+        subcommands.put("staffchat", new Subcommand("coremanager.staffchat", this::executeStaffChat));
     }
 
     @Override
@@ -47,7 +57,6 @@ public class CommandManager implements SimpleCommand {
         String[] args = invocation.arguments();
 
         if (args.length == 0) {
-            // Mostrar ayuda si no se especifica un subcomando
             Component usageMessage = messagesConfig.getMessage("commands.usage");
             if (usageMessage != null) {
                 String messageText = miniMessage.serialize(usageMessage);
@@ -67,7 +76,6 @@ public class CommandManager implements SimpleCommand {
             return;
         }
 
-        // Verificar permisos
         if (!source.hasPermission(subcommand.permission)) {
             Component noPermissionMessage = messagesConfig.getMessage("commands.no-permission");
             if (noPermissionMessage != null) {
@@ -77,7 +85,6 @@ public class CommandManager implements SimpleCommand {
             return;
         }
 
-        // Ejecutar el subcomando, pasando tanto el source como el invocation
         subcommand.executor.accept(source, invocation);
     }
 
@@ -89,7 +96,6 @@ public class CommandManager implements SimpleCommand {
         }
 
         try {
-            // Llamar al método de recarga del plugin
             plugin.reload();
             Component reloadedMessage = messagesConfig.getMessage("commands.reloaded");
             if (reloadedMessage != null) {
@@ -107,7 +113,6 @@ public class CommandManager implements SimpleCommand {
     }
 
     private void executeList(CommandSource source, Invocation invocation) {
-        // Obtener la lista de anuncios
         List<AnnouncementsConfig.Announcement> announcements = plugin.getAnnouncementsModule().getConfig().getAnnouncements();
 
         if (announcements.isEmpty()) {
@@ -119,24 +124,20 @@ public class CommandManager implements SimpleCommand {
             return;
         }
 
-        // Enviar el encabezado
         Component headerMessage = messagesConfig.getMessage("commands.list.header");
         if (headerMessage != null) {
             String messageText = miniMessage.serialize(headerMessage);
             source.sendMessage(textProcessor.processText(messageText));
         }
 
-        // Enviar cada anuncio con componentes interactivos
         for (int i = 0; i < announcements.size(); i++) {
             AnnouncementsConfig.Announcement announcement = announcements.get(i);
 
-            // Crear el componente principal del anuncio
             Component entryMessage = messagesConfig.getMessage("commands.list.entry",
                     "%id%", announcement.getId(),
                     "%type%", announcement.getType());
 
             if (entryMessage != null) {
-                // Crear el componente de hover con más detalles
                 Component hoverMessage = messagesConfig.getMessage("commands.list.entry-hover",
                         "%id%", announcement.getId(),
                         "%type%", announcement.getType(),
@@ -144,12 +145,10 @@ public class CommandManager implements SimpleCommand {
                         "%servers%", announcement.getServers().toString(),
                         "%days%", announcement.getDays().toString());
 
-                // Crear el componente de click y añadirlo al hover
                 Component clickMessage = messagesConfig.getMessage("commands.list.entry-click");
                 String clickMessageText = miniMessage.serialize(clickMessage);
                 hoverMessage = hoverMessage.append(Component.newline()).append(textProcessor.processText(clickMessageText));
 
-                // Procesar el mensaje principal y el hover
                 String entryMessageText = miniMessage.serialize(entryMessage);
                 String hoverMessageText = miniMessage.serialize(hoverMessage);
                 entryMessage = textProcessor.processText(entryMessageText)
@@ -159,7 +158,6 @@ public class CommandManager implements SimpleCommand {
                 source.sendMessage(entryMessage);
             }
 
-            // Añadir un separador entre anuncios (excepto después del último)
             if (i < announcements.size() - 1) {
                 Component separatorMessage = messagesConfig.getMessage("commands.list.separator");
                 if (separatorMessage != null) {
@@ -169,7 +167,6 @@ public class CommandManager implements SimpleCommand {
             }
         }
 
-        // Enviar el pie de página (reutilizamos el encabezado para cerrar)
         if (headerMessage != null) {
             String messageText = miniMessage.serialize(headerMessage);
             source.sendMessage(textProcessor.processText(messageText));
@@ -179,7 +176,6 @@ public class CommandManager implements SimpleCommand {
     private void executeBroadcast(CommandSource source, Invocation invocation) {
         String[] args = invocation.arguments();
 
-        // Verificar que se proporcionen los argumentos necesarios
         if (args.length < 4) {
             Component usageMessage = messagesConfig.getMessage("commands.broadcast.usage");
             if (usageMessage != null) {
@@ -193,7 +189,6 @@ public class CommandManager implements SimpleCommand {
         String typesStr = args[2];
         String message = String.join(" ", Arrays.copyOfRange(args, 3, args.length));
 
-        // Validar servidores
         List<String> serverNames = plugin.getBroadcastModule().getServerNames();
         List<String> specifiedServers = serversStr.equalsIgnoreCase("all") ?
                 Collections.singletonList("all") :
@@ -214,7 +209,6 @@ public class CommandManager implements SimpleCommand {
             }
         }
 
-        // Validar tipos y obtener la lista de tipos para el mensaje de éxito
         List<String> validTypes = plugin.getBroadcastModule().getAnnouncementTypes();
         List<String> specifiedTypes = typesStr.equalsIgnoreCase("all") ?
                 validTypes :
@@ -236,10 +230,8 @@ public class CommandManager implements SimpleCommand {
             }
         }
 
-        // Convertir la lista de tipos a una cadena para el mensaje de éxito
         String typesForMessage = String.join(", ", specifiedTypes);
 
-        // Enviar el anuncio
         boolean success = plugin.getBroadcastModule().sendBroadcast(serversStr, typesStr, message);
         if (success) {
             Component successMessage = messagesConfig.getMessage("commands.broadcast.success",
@@ -252,12 +244,51 @@ public class CommandManager implements SimpleCommand {
         }
     }
 
+    public void executeStaffChat(CommandSource source, Invocation invocation) {
+        if (!(source instanceof Player)) {
+            Component playerOnlyMessage = messagesConfig.getMessage("commands.player-only");
+            if (playerOnlyMessage != null) {
+                String messageText = miniMessage.serialize(playerOnlyMessage);
+                source.sendMessage(textProcessor.processText(messageText));
+            }
+            return;
+        }
+
+        Player player = (Player) source;
+        String[] args = invocation.arguments();
+
+        if (args.length < 1) {
+            Component usageMessage = messagesConfig.getMessage("commands.staffchat.usage");
+            if (usageMessage != null) {
+                String messageText = miniMessage.serialize(usageMessage);
+                source.sendMessage(textProcessor.processText(messageText));
+            }
+            return;
+        }
+
+        String message = String.join(" ", args);
+        String serverName = player.getCurrentServer().isPresent() ? player.getCurrentServer().get().getServerInfo().getName() : "Unknown";
+        String formattedMessage = plugin.getStaffChatModule().getConfig().getStaffChatFormat()
+                .replace("%player_name%", player.getGameProfile().getName())
+                .replace("%message%", message)
+                .replace("%server%", serverName);
+        Component chatMessage = textProcessor.processText(formattedMessage, player);
+
+        for (Player onlinePlayer : plugin.getServer().getAllPlayers()) {
+            if (onlinePlayer.hasPermission(plugin.getStaffChatModule().getConfig().getStaffChatPermission())) {
+                onlinePlayer.sendMessage(chatMessage);
+            }
+        }
+
+        // Envía a Discord usando el webhook
+        webhookSender.sendMessage(player.getGameProfile().getName(), message, serverName);
+    }
+
     @Override
     public List<String> suggest(Invocation invocation) {
         String[] args = invocation.arguments();
 
         if (args.length <= 1) {
-            // Sugerir subcomandos
             return subcommands.keySet().stream()
                     .filter(cmd -> args.length == 0 || cmd.startsWith(args[0].toLowerCase()))
                     .collect(Collectors.toList());
@@ -266,14 +297,12 @@ public class CommandManager implements SimpleCommand {
         String subCommand = args[0].toLowerCase();
         if (subCommand.equals("broadcast")) {
             if (args.length == 2) {
-                // Sugerir servidores
                 List<String> suggestions = new ArrayList<>(plugin.getBroadcastModule().getServerNames());
                 suggestions.add("all");
                 return suggestions.stream()
                         .filter(s -> args[1].isEmpty() || s.toLowerCase().startsWith(args[1].toLowerCase()))
                         .collect(Collectors.toList());
             } else if (args.length == 3) {
-                // Sugerir tipos
                 List<String> suggestions = new ArrayList<>(plugin.getBroadcastModule().getAnnouncementTypes());
                 suggestions.add("all");
                 return suggestions.stream()
@@ -287,11 +316,9 @@ public class CommandManager implements SimpleCommand {
 
     @Override
     public boolean hasPermission(Invocation invocation) {
-        // Permitir que cualquiera use el comando base, pero los subcomandos tendrán sus propios permisos
         return true;
     }
 
-    // Clase interna para representar un subcomando
     private static class Subcommand {
         private final String permission;
         private final BiConsumer<CommandSource, Invocation> executor;

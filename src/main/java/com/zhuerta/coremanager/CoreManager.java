@@ -10,7 +10,9 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.zhuerta.coremanager.announcements.AnnouncementsModule;
 import com.zhuerta.coremanager.broadcast.BroadcastModule;
 import com.zhuerta.coremanager.commands.CommandManager;
+import com.zhuerta.coremanager.commands.StaffChatCommand;
 import com.zhuerta.coremanager.config.MessagesConfig;
+import com.zhuerta.coremanager.staffchat.StaffChatModule;
 import com.zhuerta.coremanager.utils.TextProcessor;
 import net.kyori.adventure.text.Component;
 
@@ -23,8 +25,10 @@ public class CoreManager {
     private final ProxyServer server;
     private AnnouncementsModule announcementsModule;
     private BroadcastModule broadcastModule;
+    private StaffChatModule staffChatModule;
     private TextProcessor textProcessor;
     private MessagesConfig messagesConfig;
+    private CommandManager commandManager;
     private final Map<String, Long> lastSentTimes = new HashMap<>();
 
     @Inject
@@ -34,7 +38,6 @@ public class CoreManager {
 
     @Subscribe
     public void onProxyInitialization(ProxyInitializeEvent event) {
-        // Inicializamos el TextProcessor y MessagesConfig
         this.textProcessor = new TextProcessor(server);
         this.messagesConfig = new MessagesConfig(textProcessor);
 
@@ -43,16 +46,25 @@ public class CoreManager {
             server.getConsoleCommandSource().sendMessage(startingMessage);
         }
 
-        // Crear los metadatos del comando
+        // Inicializamos StaffChatModule ANTES de CommandManager
+        this.staffChatModule = new StaffChatModule(this, textProcessor);
+
+        // Registrar el comando /coremanager (con alias /cm)
         CommandMeta commandMeta = server.getCommandManager()
                 .metaBuilder("coremanager")
                 .aliases("cm")
                 .build();
 
-        // Registrar el comando usando el método moderno
-        server.getCommandManager().register(commandMeta, new CommandManager(this));
+        this.commandManager = new CommandManager(this);
+        server.getCommandManager().register(commandMeta, commandManager);
 
-        // Inicializar módulos
+        // Registrar el comando /sc
+        CommandMeta staffChatMeta = server.getCommandManager()
+                .metaBuilder("sc")
+                .build();
+
+        server.getCommandManager().register(staffChatMeta, new StaffChatCommand(commandManager));
+
         this.announcementsModule = new AnnouncementsModule(this, textProcessor);
         this.announcementsModule.start();
 
@@ -75,6 +87,10 @@ public class CoreManager {
             announcementsModule.stop();
         }
 
+        if (staffChatModule != null) {
+            staffChatModule.shutdown();
+        }
+
         Component stoppedMessage = messagesConfig.getMessage("plugin.stopped");
         if (stoppedMessage != null) {
             server.getConsoleCommandSource().sendMessage(stoppedMessage);
@@ -82,26 +98,28 @@ public class CoreManager {
     }
 
     public void reload() {
-        // Recargar MessagesConfig
         if (messagesConfig != null) {
             messagesConfig.reload();
         }
 
-        // Detener los módulos actuales
         if (announcementsModule != null) {
             announcementsModule.stop();
         }
 
-        // Recargar BroadcastModule
         if (broadcastModule != null) {
             broadcastModule.reload();
         }
 
-        // Reiniciar los módulos
+        if (staffChatModule != null) {
+            staffChatModule.reload();
+        }
+
         this.announcementsModule = new AnnouncementsModule(this, textProcessor);
         this.announcementsModule.start();
 
         this.broadcastModule = new BroadcastModule(this, textProcessor);
+
+        this.staffChatModule = new StaffChatModule(this, textProcessor);
     }
 
     public ProxyServer getServer() {
@@ -122,6 +140,10 @@ public class CoreManager {
 
     public BroadcastModule getBroadcastModule() {
         return broadcastModule;
+    }
+
+    public StaffChatModule getStaffChatModule() {
+        return staffChatModule;
     }
 
     public Map<String, Long> getLastSentTimes() {

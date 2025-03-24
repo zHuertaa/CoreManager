@@ -1,0 +1,11 @@
+discord:
+  bot-token: "MTM0ODcyMzY2MTkyNjA0MzcxOQ.GTgUS_.3bnSImc8noLIsiJX5yx_1w2HQXFvcIm8yDgZmE"
+  channel-id: "1344878431426445322"
+  webhook-url: "https://discord.com/api/webhooks/1351732084259160155/Hj6PyJwysPSr47OuDM6sPSbGxh-_RvnVYtwUcyk8Yaua3VKN-lebk_KS_f7g4kOv9wVt"
+
+staffchat:
+  permission: "coremanager.staffchat"
+  format: "&7[StaffChat] &e%player_name% &7(%server%)&7: %message%"
+  discord-format: "%message%"
+  discord-to-mc-format: "&7[StaffChat] &9[Discord] &e%username%&7: %message%"
+  webhook-name-format: "%player_name% [%server%]" # Nuevo campo para el nombre del webhook
